@@ -1,0 +1,206 @@
+---
+title: "R Code for: Causal Inference in Population Trends: Searching for Demographic Anomalies in Big Data"
+author: ""
+date: "9/14/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Replication document
+
+```{r Load, include=FALSE}
+library(knitr)
+read_chunk('../R/SCRIPTS/000-Libraries.R')
+read_chunk('../R/SCRIPTS/001-DataLoad.R')
+read_chunk('../R/SCRIPTS/001-AnomaliesDetection.R')
+read_chunk('../R/SCRIPTS/002-StatesAnalysis.R')
+read_chunk('../R/SCRIPTS/003-SummaryStats.R')
+read_chunk('../R/SCRIPTS/004-SimulationPower.R')
+```
+
+# Loading the libraries and setting the workspace
+```{r libraries, warning=FALSE, message = FALSE}
+```
+
+# Anomaly Detection
+This code chunk will loop through monthly, state-level mortality and fertility data to locate anomalies and save the results to the hard drive. This loop is set to just 5 states to aid in computational speed.
+
+```{r AnomaliesDetection, warning = FALSE, message=FALSE, cache=TRUE}
+```
+
+# Reloading data
+This chunk simply reloads to the data that was saved to the hard drive.
+```{r DataLoad, warning=FALSE, message = FALSE}
+```
+
+# Summary Statistics
+This chunk will calculate several summary statistics used throughout the manuscript.
+```{r SumStats, warning=FALSE, message = FALSE}
+```
+
+# Abstract Calculations
+This will calculate the computations found in the Abstract.
+```{r, warning = FALSE, message=FALSE}
+## These calculations are for the abstract.
+anom_mort <- read_rds("../R/DATA-PROCESSED/mortality_anomalies") %>%
+   na.omit %>%
+   mutate(component = "Mortality")
+
+ anom_fert <- read_rds("../R/DATA-PROCESSED/fertility_anomalies") %>%
+   na.omit %>%
+   mutate(component = "Fertility")
+ 
+abstract <- rbind(anom_mort, anom_fert) %>%
+   group_by(type, location, component) %>%
+   dplyr::summarise(Anomalies =  n()) %>%
+  ungroup() %>%
+  dplyr::select(location, component) %>%
+  group_by(component)
+
+nrow(distinct(abstract[which(abstract$component=="Mortality"),]))
+nrow(distinct(abstract[which(abstract$component=="Fertility"),]))
+
+
+abstractsums <- rbind(mortsum, fertsum)
+
+# Total # of states with mortality anomalies greater than 0
+nrow(abstractsums[which(abstractsums$component == "Mortality" & abstractsums$ydiff>0),])
+# Sums of Mortality anomalies greater than 0 
+sum(abstractsums$ydiff[which(abstractsums$component == "Mortality" & abstractsums$ydiff>0)])
+# Total # of states with mortality anomalies less than 0
+nrow(abstractsums[which(abstractsums$component == "Mortality" & abstractsums$ydiff<0),])
+# Sums of Mortality anomalies less than 0 
+sum(abstractsums$ydiff[which(abstractsums$component == "Mortality" & abstractsums$ydiff<0)])
+
+# Total # of states with mortality anomalies greater than 0
+nrow(abstractsums[which(abstractsums$component == "Fertility" & abstractsums$ydiff>0),])
+# Total # of states with 
+sum(abstractsums$ydiff[which(abstractsums$component == "Fertility" & abstractsums$ydiff>0)])
+nrow(abstractsums[which(abstractsums$component == "Fertility" & abstractsums$ydiff<0),])
+sum(abstractsums$ydiff[which(abstractsums$component == "Fertility" & abstractsums$ydiff<0)])
+```
+
+# Simulation
+This is the simulation excercise.
+```{r SimulationPower, cache=TRUE, message=FALSE, warning=FALSE}
+```
+
+# Figures and Tables
+## Figure 1
+```{r FertilityAnomalies, message = FALSE, warning = FALSE, fig.cap= paste("\\textbf{Anomaly detection in Louisiana (a) and Connecticut (b) state fertility, 2003-2018.} The top part of each panel contains the original time series (light gray), the corrected, counter-factual time series in the absence of anomalies (blue), and the red dots correspond to the onset of detected anomalies. The bottom part of each panel contains the magnitude and type of the outlier in red. In (a), we detect two outliers, back-to-back, likely resulting from Hurricane Katrina in August and October 2005, representing a decrease of more than 4,400 births due to the hurricane (t-statistics= -6.002 and -4.997). In (b), we detect one outlier, a level shift outlier (LS) in August 2009. We believe this reduction is attributable to the stock market crash 11 months earlier (t-statistic = -3.71). \\label{fig:fertla}")}
+
+a <-  function() {
+  plot(outlier.fert.la, cex.axis=0.8)
+  title(main = "Louisiana - Fertility", adj = 0.9)
+}
+
+b <- function(){
+  plot(outlier.fert.conn, cex.axis=0.8) +
+  title(main = "Connecticut - Fertility", adj = 0.88)
+}
+
+plot_grid(ggdraw(a) ,
+               ggdraw(b), 
+               ncol=1,
+               labels= "auto")
+```
+
+## Figure 2
+```{r MortalityAnomalies, message = FALSE, warning = FALSE, fig.height = 5, fig.cap= paste("\\textbf{Anomaly Detection for New York (a) and New Hampshire (b) state mortality, 1999-2016.} In New York (a), we detect additive outliers (AO) in January 2000, September 2001, January 2005, and January 2013; temporary change (TC) outliers in February 2007 and January 2015; and a level shift (LS) starting in February 2004. In New Hampshire (b), we detect two outliers, both level shift outliers (LS) in April 2010 and again in November 2014. These anomalies suggest New York experienced a significant mortality event in September 2001 and New Hampshire experienced approximately 9,700 more deaths than expected since 2010 or 14% more deaths in the state over just seven years. \\label{fig:mortnewhamp}")}
+
+a <-  function() {
+plot(outlier.mort.ny, cex = 0.8)
+title("New York - Mortality", adj = 0.9, line =2)
+}
+
+b <-  function() {
+  plot(outlier.mort.nh, cex = 0.8)
+  title("New Hampshire - Mortality", adj = 0.82,line =2)
+}
+
+plot_grid(ggdraw(a) ,
+               ggdraw(b), 
+               ncol=1,
+               labels= "auto")
+```
+
+## Figure 3
+```{r TrueAnomalies, message = FALSE, warning = FALSE, fig.height = 5, fig.cap= paste("\\textbf{Anomaly detection in Hawaii state fertility (a) and Ohio state mortality (b).} Here we detect one outlier, an additive outlier (AO) in May 2014 in Hawaii (a), representing a large, unexplainable 14% increase in expected births in that month. We also detect a strong level shift (LS) reduction (b), representing a large, unexplainable reduction of nearly 40,000 deaths in Ohio.  \\label{fig:ferthawaii}")}
+
+a <-  function() {
+plot(outlier.fert.hi, cex.axis=0.8)
+  title(main = "Hawaii - Fertility", adj = 0.88)
+}
+
+b <-  function() {
+plot(outlier.mort.oh, cex.axis=0.8)
+  title(main = "Ohio - Mortality", adj = 0.9)
+}
+
+
+plot_grid(ggdraw(a) ,
+               ggdraw(b), 
+               ncol=1,
+               labels= "auto")
+```
+
+## Table 1
+```{r, echo = TRUE}
+
+sums2 <- sums %>%
+  dplyr::select(percent_anom = `\\% of Total`, everything())
+kable(sums,
+       "html",
+       # booktabs = T,
+       format.args = list(big.mark = ","),
+       escape = FALSE) %>%
+   kable_styling(position = "center")
+
+```
+
+## Figure 3
+```{r AnomalyMap, warning=FALSE, message=FALSE}
+ data(state_laea)
+
+ anom_mort2 <- rbind(anom_mort, anom_fert) %>%
+   group_by(type, location, component) %>%
+   dplyr::summarise(Anomalies =  n()) %>%
+   mutate(ident = paste0(component, " - ", type),
+          GEOID = substr(location, 2,3)) %>%
+   ungroup() %>%
+   dplyr::select(GEOID, Anomalies, ident) %>%
+   spread(ident, Anomalies) %>%
+     mutate_all(funs(replace_na(.,0)))
+
+
+ states <- left_join(state_laea, anom_mort2) %>%
+   gather(ident, Anomalies, `Fertility - AO`:`Mortality - TC`) %>%
+   mutate_all(funs(replace_na(.,0))) %>%
+   mutate(Anomalies = factor(Anomalies))
+
+ states$ident2 <- factor(
+   states$ident,
+   levels = c("Mortality - AO", "Fertility - AO",
+              "Mortality - TC", "Fertility - TC",
+              "Mortality - LS", "Fertility - LS")
+ )
+
+ colorpal <- c("#ffffff", "#ffffcc", "#a1dab4", "#41b6c4", "#2c7fb8", "#253494")
+
+   ggplot(data=states) +
+   geom_sf(aes(fill = Anomalies),  lwd = 1/2) +
+   theme_bw() +
+   theme(axis.title=element_blank(),
+         axis.text=element_blank(),
+         axis.ticks=element_blank(),
+         legend.position="bottom"
+   )+
+   guides(fill=guide_legend(nrow=1,byrow=TRUE)) +
+   facet_wrap(~ident2, ncol=2) +
+     scale_fill_manual(name = "# of Anomalies", values = colorpal) +
+
+   NULL
+```

@@ -1,38 +1,10 @@
-# PAPER TITLE
-
 # Introduction
-Here we provide the data and code for:  [**PAPER TITLE**](https://github.com/mathewhauer/paper_template/blob/master/MANUSCRIPT/manuscript.pdf)
-
-### Citation
-
-
-> Hauer, M.E. & Scientist 2. *Great Journal* (DOI Forthcoming) (YEAR ACCESSED).
-
+Here I provide the code for: [Causal Inference in Population Trends: Searching for Demographic Anomalies in Big Data]
 
 # Abstract
-> Lorem Ipsum
-
-![Main Figure](MANUSCRIPT/manuscript_files/figure-latex/pressure-1.png "Main Figure")
-
-**Figure Title.** Description of Figure.
-
-To see all of the underlying code and the results, [click here](http://htmlpreview.github.io/?https://github.com/mathewhauer/paper_template/blob/master/MANUSCRIPT/reproduce.html)
+> The proliferation of big data, wider access to advanced computing platforms, and the development of powerful statistical algorithms can uncover hidden anomalies in social data, previously dismissed as noise. Here, we combine causal inference techniques and abductive reasoning to identify fertility and mortality anomalies on twenty years of complete demographic data in the United States. We uncover real, “hidden” baby booms/busts and mortality spikes/dips, distinguishable from regular trend variations. We identify more than 22 and 156 fertility and mortality anomalies, totaling more than 200k and 600k anomalous births and deaths, respectively. Notable detectable mortality anomalies include the September 11 2001 terrorist attack in New York and the emergence and acceleration of the opioid epidemic in New Hampshire. Notable fertility anomalies include the “missing births” in Louisiana after Hurricane Katrina and the reduction in fertility behavior after the September 2008 stock market crash in Connecticut, amongst others. The combined causal inference and abductive reasoning approach can be readily adapted to find other, undiscovered social phenomena or to evaluate the efficacy of important public policies.
 
 # Organization
-- `/R/SCRIPTS/`  — Scripts and output for figures included in the main document.
-- `/R/DATA-RAW/`  — Initial data resources, unprocessed.
-- `/R/DATA-PROCESSED/` — Post-processed data for our analysis.
-- `/MANUSCRIPT/manuscript.Rmd` — contains a replication of the manuscript file
-
-- `/MANUSCRIPT/reproduce.Rmd` — contains a replication for underlying estimates.
-
-
-
-# Use
-- Feel free to create a new branch for further incorporation and analysis. 
-
-# Correspondence
-For any issues with the functionality of these scripts please [create an issue](https://github.com/mathewhauer/paper_template/issues).
-
-## License
-The data collected and presented is licensed under the [Creative Commons Attribution 3.0 license](http://creativecommons.org/licenses/by/3.0/us/deed.en_US), and the underlying code used to format, analyze and display that content is licensed under the [MIT license](http://opensource.org/licenses/mit-license.php).
+* `R` - contains the R scripts and the data needed to reproduce the analysis
+* `MANUSCRIPT` - contains the replication file and the main manuscript. 
+* `MANUSCRIPT/OpenScience.Rmd` and  `MANUSCRIPT/OpenScience.html` contain simplifed replication code.
