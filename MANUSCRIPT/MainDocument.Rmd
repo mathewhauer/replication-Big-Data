@@ -16,7 +16,7 @@ keywords:
 
 abstract: "The proliferation of big data, wider access to advanced computing platforms, and the development of powerful statistical algorithms can uncover hidden anomalies in social data, previously dismissed as noise. Here, we demonstrate how researchers can combine causal inference techniques and abductive reasoning using an example that identifies fertility and mortality anomalies on twenty years of complete demographic data in the United States. We uncover real, “hidden” baby booms/busts and mortality spikes/dips, distinguishable from regular trend variations. We identify more than 22 fertility and 156 mortality anomalies, totaling more than 200k anomalous births and 600k anomalous deaths. Notable detectable mortality anomalies include the September 11 2001 terrorist attack in New York and the emergence and acceleration of the opioid epidemic in New Hampshire. Notable fertility anomalies include the “missing births” in Louisiana after Hurricane Katrina and the reduction in fertility behavior after the September 2008 stock market crash in Connecticut, among others. The combined causal inference and abductive reasoning approach can be readily adapted to find other, undiscovered social phenomena or to evaluate the efficacy of important public policies."
   
-bibliography: ../MainDocument/mybibfile.bib
+bibliography: ../MANUSCRIPT/mybibfile.bib
 
 output: rticles::asa_article
 
