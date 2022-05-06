@@ -1,7 +1,7 @@
 ---
-title: "R Code for: Causal Inference in Population Trends: Searching for Demographic Anomalies in Big Data"
+title: "R Code for: Identifying Demographic Anomalies in Big (and Small) Data"
 author: ""
-date: "9/14/2020"
+#date: "3/30/2021"
 output: html_document
 ---
 
@@ -84,67 +84,125 @@ sum(abstractsums$ydiff[which(abstractsums$component == "Fertility" & abstractsum
 ```
 
 # Simulation
-This is the simulation excercise.
+This is the simulation exercise.
 ```{r SimulationPower, cache=TRUE, message=FALSE, warning=FALSE}
 ```
 
 # Figures and Tables
+Helper function for the figures.
+
+```{r , message=FALSE, warning=FALSE}
+n.sims <- 1e3
+
+# This function will simulate 100 time series with similar values as the target database and make a ggplot figure version of tsoutliers baseplot but with an 95th percentile confidence interval.
+makefigure <- function(this.outlier, titles){
+set.seed(1)
+sims.hist <- matrix(NA,nrow=n.sims,ncol=length(this.outlier$y))
+
+   createsim <- function(ii){
+    
+    arima.sim(n=length(this.outlier$y), model=list(this.outlier$fit), sd = sdval) + as.vector(this.outlier$yadj)
+   }
+     sdval <- sqrt(this.outlier$fit$sigma2)
+  for ( ii in 1:n.sims ) {
+    sims.hist[ii,] <- as.vector(createsim())
+  }
+
+
+conf <- c(0.95)
+ylim <- range(
+  apply(sims.hist,2,quantile,prob=c((1-max(conf))/2,1-(1-max(conf))/2)))
+boundaries.hist <- apply(sims.hist,2,quantile,prob=c((1-rev(conf)[1])/2,1-(1-rev(conf)[1])/2))
+
+a <- data.frame(Y=as.matrix(this.outlier$yadj),
+                date = time(this.outlier$yadj),
+                ymin = as.matrix(boundaries.hist[1,]),
+                ymax = as.matrix(boundaries.hist[2,])
+)
+b <- data.frame(y = as.matrix(this.outlier$y),
+                date = time(this.outlier$y))
+pts <- data.frame(date = this.outlier$times,
+                  y = this.outlier$y[this.outlier$outliers$ind])
+
+effectsizes <- data.frame(date =time(this.outlier$y),
+                           y= this.outlier$y - this.outlier$yadj)
+
+top <- ggplot(data= a, aes(x = date, y=Y)) +
+  geom_line(data= b, aes(x=date, y=y), color = "red") +
+  geom_line() +
+  geom_ribbon(aes(ymin = ymin, ymax = ymax), alpha = 0.2) +
+  geom_point(data=pts, aes(x=date, y =y), color = "red", fill = NA, size = 2, shape =21) +
+  theme_bw() +
+  scale_y_continuous(labels=comma) +
+  labs(x="", y ="",
+       title = paste(titles, "<br>
+       <span style='font-size:10pt'><span style='color:#FF0000'>**Original**</span> and **Adjusted**  series</span>"
+        )) +
+  theme(
+    plot.title = element_markdown(lineheight = 1.2),
+    axis.title.x=element_blank(),
+    axis.text.x=element_blank(),
+    axis.ticks.x = element_blank(),
+    plot.margin = unit(c(0.1, 0, 0, 0), "cm")
+  )
+
+bot <- 
+  ggplot(data = effectsizes, aes(x=date, y=y)) +
+  geom_line(color="blue") +
+  theme_bw() +
+  theme(plot.margin = unit(c(0, 0, 0, 0), "cm")) +
+  scale_y_continuous(labels=comma,
+                     position = "right") +
+  labs(x="", y ="")
+
+together <- plot_grid(top, bot, ncol=1,
+           align = "v", rel_heights = c(1,0.6))
+
+return(together)
+}
+
+```
+
 ## Figure 1
 ```{r FertilityAnomalies, message = FALSE, warning = FALSE, fig.cap= paste("\\textbf{Anomaly detection in Louisiana (a) and Connecticut (b) state fertility, 2003-2018.} The top part of each panel contains the original time series (light gray), the corrected, counter-factual time series in the absence of anomalies (blue), and the red dots correspond to the onset of detected anomalies. The bottom part of each panel contains the magnitude and type of the outlier in red. In (a), we detect two outliers, back-to-back, likely resulting from Hurricane Katrina in August and October 2005, representing a decrease of more than 4,400 births due to the hurricane (t-statistics= -6.002 and -4.997). In (b), we detect one outlier, a level shift outlier (LS) in August 2009. We believe this reduction is attributable to the stock market crash 11 months earlier (t-statistic = -3.71). \\label{fig:fertla}")}
 
-a <-  function() {
-  plot(outlier.fert.la, cex.axis=0.8)
-  title(main = "Louisiana - Fertility", adj = 0.9)
-}
+a<- makefigure(outlier.fert.la, "Louisiana - Fertility")
+b <- makefigure(outlier.fert.conn, "Connecticut - Fertility")
 
-b <- function(){
-  plot(outlier.fert.conn, cex.axis=0.8) +
-  title(main = "Connecticut - Fertility", adj = 0.88)
-}
-
-plot_grid(ggdraw(a) ,
-               ggdraw(b), 
+together <- plot_grid(a,
+               b, 
                ncol=1,
-               labels= "auto")
+               labels= "auto",
+               rel_heights = c(1, 1))
+ggdraw(add_sub(together, "Shaded region is the 95th percentile confidence interval", size = 8 ,x=1, hjust=1.1))
 ```
 
 ## Figure 2
 ```{r MortalityAnomalies, message = FALSE, warning = FALSE, fig.height = 5, fig.cap= paste("\\textbf{Anomaly Detection for New York (a) and New Hampshire (b) state mortality, 1999-2016.} In New York (a), we detect additive outliers (AO) in January 2000, September 2001, January 2005, and January 2013; temporary change (TC) outliers in February 2007 and January 2015; and a level shift (LS) starting in February 2004. In New Hampshire (b), we detect two outliers, both level shift outliers (LS) in April 2010 and again in November 2014. These anomalies suggest New York experienced a significant mortality event in September 2001 and New Hampshire experienced approximately 9,700 more deaths than expected since 2010 or 14% more deaths in the state over just seven years. \\label{fig:mortnewhamp}")}
 
-a <-  function() {
-plot(outlier.mort.ny, cex = 0.8)
-title("New York - Mortality", adj = 0.9, line =2)
-}
+a<- makefigure(outlier.mort.ny, "New York - Mortality")
+b <- makefigure(outlier.mort.nh, "New Hampshire - Mortality")
 
-b <-  function() {
-  plot(outlier.mort.nh, cex = 0.8)
-  title("New Hampshire - Mortality", adj = 0.82,line =2)
-}
-
-plot_grid(ggdraw(a) ,
-               ggdraw(b), 
+together <- plot_grid(a,
+               b, 
                ncol=1,
-               labels= "auto")
+               labels= "auto",
+               rel_heights = c(1, 1))
+ggdraw(add_sub(together, "Shaded region is the 95th percentile confidence interval", size = 8 ,x=1, hjust=1.1))
 ```
 
 ## Figure 3
 ```{r TrueAnomalies, message = FALSE, warning = FALSE, fig.height = 5, fig.cap= paste("\\textbf{Anomaly detection in Hawaii state fertility (a) and Ohio state mortality (b).} Here we detect one outlier, an additive outlier (AO) in May 2014 in Hawaii (a), representing a large, unexplainable 14% increase in expected births in that month. We also detect a strong level shift (LS) reduction (b), representing a large, unexplainable reduction of nearly 40,000 deaths in Ohio.  \\label{fig:ferthawaii}")}
 
-a <-  function() {
-plot(outlier.fert.hi, cex.axis=0.8)
-  title(main = "Hawaii - Fertility", adj = 0.88)
-}
+a<- makefigure(outlier.fert.hi, "Hawaii - Fertility")
+b <- makefigure(outlier.mort.oh, "Ohio - Mortality")
 
-b <-  function() {
-plot(outlier.mort.oh, cex.axis=0.8)
-  title(main = "Ohio - Mortality", adj = 0.9)
-}
-
-
-plot_grid(ggdraw(a) ,
-               ggdraw(b), 
+together <- plot_grid(a,
+               b, 
                ncol=1,
-               labels= "auto")
+               labels= "auto",
+               rel_heights = c(1, 1))
+ggdraw(add_sub(together, "Shaded region is the 95th percentile confidence interval", size = 8 ,x=1, hjust=1.1))
 ```
 
 ## Table 1
@@ -172,13 +230,16 @@ kable(sums,
           GEOID = substr(location, 2,3)) %>%
    ungroup() %>%
    dplyr::select(GEOID, Anomalies, ident) %>%
-   spread(ident, Anomalies) %>%
-     mutate_all(funs(replace_na(.,0)))
+   spread(ident, Anomalies)
+ 
+  anom_mort2[is.na(anom_mort2)] <- 0
+
 
 
  states <- left_join(state_laea, anom_mort2) %>%
-   gather(ident, Anomalies, `Fertility - AO`:`Mortality - TC`) %>%
-   mutate_all(funs(replace_na(.,0))) %>%
+   gather(ident, Anomalies, `Fertility - AO`:`Mortality - TC`) 
+ states[is.na(states)] <- 0
+ states <- states %>%
    mutate(Anomalies = factor(Anomalies))
 
  states$ident2 <- factor(
